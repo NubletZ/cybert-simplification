@@ -1,0 +1,11 @@
+# Phase 2 (Eq. 16): cycle-consistent adversarial style transfer.
+#
+#   python -m cybert.cli train-phase2 --config configs/phase2.yaml \
+#          --init-from runs/cybert_phase1/best.pt
+#
+# Set phase2.lambda_paired=0.0 to reproduce the unpaired rows of Table 2.
+
+_base_: base.yaml
+
+run:
+  output_dir: runs/cybert_phase2

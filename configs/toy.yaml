@@ -1,0 +1,47 @@
+# Tiny end-to-end smoke configuration.
+#
+# Runs both phases on the bundled toy corpus in minutes, on CPU if necessary.
+# It is a correctness gate, not a quality run -- the numbers mean nothing.
+
+_base_: base.yaml
+
+model:
+  latent_dim: 768
+  style_ratio: 0.05
+  decoder_hidden: 256
+  decoder_layers: 2
+  dropout: 0.1
+  fusion: adain
+
+noise:
+  mask_ratio: 0.3
+  max_spans: 3
+
+data:
+  train_complex: data/toy/train.complex.txt
+  train_simple: data/toy/train.simple.txt
+  valid_complex: data/toy/valid.complex.txt
+  valid_simple: data/toy/valid.simple.txt
+  train_paired: data/toy/train.paired.tsv
+  valid_paired: data/toy/valid.paired.tsv
+  test_paired: data/toy/valid.paired.tsv
+  num_workers: 0
+
+optim:
+  batch_size: 4
+
+phase1:
+  epochs: 2
+
+phase2:
+  epochs: 2
+
+decode:
+  beam_size: 2
+  max_length: 32
+
+run:
+  output_dir: runs/toy
+  log_every: 5
+  patience: 5
+  max_eval_samples: 32

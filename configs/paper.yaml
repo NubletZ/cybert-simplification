@@ -1,0 +1,66 @@
+# The paper's selected configuration (4.3.1), run on Hugging Face corpora.
+#
+#   python -m cybert.data.hf_prepare      --out-dir data
+#   python -m cybert.data.wiki_hf_prepare --out-dir data/wiki --target 200000
+#   python -m cybert.cli train-phase1 --config configs/paper.yaml
+#   python -m cybert.cli train-phase2 --config configs/paper.yaml \
+#          --init-from runs/paper_phase1/best.pt --set run.output_dir=runs/paper_phase2
+#   python -m cybert.cli evaluate --ckpt runs/paper_phase2/best.pt \
+#          --paired data/asset/test.paired.tsv
+#
+# Deviations from 4.3, all deliberate and listed here:
+#   * batch_size 32 rather than 8 -- the card has 96GB and the paper's value is
+#     a memory constraint, not a modelling choice.
+#   * 200k unpaired sentences per domain rather than 2M per domain. Figure 7
+#     shows this is the axis that drives performance, so results will fall
+#     short of Tables 2-3 for this reason above any other.
+#   * epochs cut to fit the compute budget; early stopping on validation SARI
+#     still governs checkpoint selection.
+
+_base_: base.yaml
+
+data:
+  # Unpaired: streamed Wikipedia, FRE-split as in 4.1.
+  train_complex: data/wiki/train.complex.txt
+  train_simple: data/wiki/train.simple.txt
+  valid_complex: data/wiki/valid.complex.txt
+  valid_simple: data/wiki/valid.simple.txt
+  # Paired: ASSET + TurkCorpus training splits interleaved (4.2). The official
+  # test splits appear nowhere here.
+  train_paired: data/combined/train.paired.tsv
+  valid_paired: data/combined/valid.paired.tsv
+  test_paired: data/asset/test.paired.tsv
+  num_workers: 4
+
+model:
+  style_ratio: 0.05                 # 4.3.1
+  fusion: adain                     # best ASSET SARI in Table 8
+  use_attention: true
+
+noise:
+  enabled: true                     # IN + POS, the proposed setting
+  use_pos: true
+
+optim:
+  batch_size: 32
+  bert_lr: 2.0e-5
+  head_lr: 1.0e-3
+
+phase1:
+  epochs: 10
+
+phase2:
+  epochs: 5
+  cycle_mode: teacher_forced
+  lambda_cycle: 10.0
+  lambda_paired: 1.0
+
+decode:
+  beam_size: 4                      # Appendix G.2
+  temperature: 1.0
+
+run:
+  output_dir: runs/paper_phase1
+  log_every: 200
+  max_eval_samples: 400
+  patience: 5

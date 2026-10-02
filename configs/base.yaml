@@ -1,0 +1,100 @@
+# CyBERT reference configuration.
+#
+# Values traceable to the paper carry a section/equation/table reference.
+# Values the paper leaves unspecified are marked UNSPECIFIED and are listed in
+# README.md so they can be swept without hunting through the code.
+
+model:
+  bert_name: bert-base-uncased      # 4.3
+  max_length: 64                    # 4.3
+  latent_dim: 768                   # UNSPECIFIED (paper fixes only the ratio)
+  style_ratio: 0.05                 # 4.3.1 / Table 7  -> 38 style, 730 content
+  decoder_hidden: 512               # 4.3
+  decoder_layers: 2                 # 4.3
+  dropout: 0.3                      # 4.3
+  use_attention: true               # Table 9 ablation flips this
+  tie_input_embeddings: true
+  fusion: adain                     # 3.2.3 / Eq. 10; {"adain", "concat"}
+  classifier_hidden: 256
+  num_styles: 2
+
+noise:
+  enabled: true                     # Table 8 "w/o noise" flips this
+  use_pos: true                     # Table 8 "w/ IN" (random infilling) flips this
+  poisson_lambda: 3.0               # 3.2.1
+  mask_ratio: 0.30                  # UNSPECIFIED (BART default)
+  max_spans: 8
+  pos_categories: [VERB, NOUN, AUX, ADJ, ADV]   # Eq. 1
+  spacy_model: en_core_web_sm
+  cache_dir: .cache/pos
+
+data:
+  train_complex: data/wiki/train.complex.txt
+  train_simple: data/wiki/train.simple.txt
+  valid_complex: data/wiki/valid.complex.txt
+  valid_simple: data/wiki/valid.simple.txt
+  train_paired: data/asset/train.paired.tsv
+  valid_paired: data/asset/valid.paired.tsv
+  test_paired: data/asset/test.paired.tsv
+  fre_complex_max: 10.0             # 4.1
+  fre_simple_min: 70.0              # 4.1
+  num_workers: 2
+  seed: 42
+
+optim:
+  bert_lr: 2.0e-5                   # 4.3
+  head_lr: 1.0e-3                   # 4.3
+  disc_lr: 1.0e-4                   # UNSPECIFIED
+  weight_decay: 0.01                # 4.3
+  grad_clip: 1.0                    # 4.3
+  batch_size: 8                     # 4.3
+  grad_accum: 1
+  warmup_ratio: 0.06                # UNSPECIFIED
+
+phase1:                             # Eq. 8; all lambdas UNSPECIFIED
+  epochs: 20                        # 4.3
+  lambda_gen: 1.0
+  lambda_cls_style: 1.0
+  lambda_cls_content: 1.0
+  lambda_emb: 1.0
+  grl_max: 1.0
+  grl_warmup_ratio: 0.1
+  style_bank_momentum: 0.99
+
+phase2:                             # Eq. 16; all lambdas UNSPECIFIED
+  epochs: 30                        # 4.3
+  lambda_cycle: 10.0
+  lambda_adv_sim: 1.0
+  lambda_adv_com: 1.0
+  lambda_style: 1.0
+  lambda_content: 1.0
+  lambda_emb: 1.0
+  lambda_paired: 1.0                # set 0.0 for the unpaired rows of Table 2
+  paired_every: 1
+  cycle_mode: teacher_forced        # {"teacher_forced", "gumbel"}
+  cycle_max_len: 64
+  cycle_normalize: true             # UNSPECIFIED; rescales Eq. 9 by 1/768
+  gumbel_tau_start: 2.0
+  gumbel_tau_end: 0.5
+  soft_temperature: 1.0
+  grl_max: 1.0
+  style_bank_momentum: 0.99
+  d_steps: 1
+
+decode:
+  beam_size: 4                      # Appendix G.2
+  temperature: 1.0                  # Appendix G.2
+  max_length: 64
+  length_penalty: 1.0
+  no_repeat_ngram_size: 3           # UNSPECIFIED
+
+run:
+  output_dir: runs/cybert
+  device: auto
+  fp16: false
+  log_every: 50
+  eval_every_epoch: true
+  patience: 5                       # 4.3
+  max_eval_samples: 500
+  save_best_only: true
+  seed: 42

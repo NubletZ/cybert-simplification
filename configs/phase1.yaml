@@ -1,0 +1,8 @@
+# Phase 1 (Eq. 8): denoising reconstruction + content-style disentanglement.
+#
+#   python -m cybert.cli train-phase1 --config configs/phase1.yaml
+
+_base_: base.yaml
+
+run:
+  output_dir: runs/cybert_phase1

@@ -1,0 +1,24 @@
+# Core
+torch>=2.2
+transformers>=4.40
+tokenizers>=0.19
+numpy>=1.24
+pyyaml>=6.0
+
+# POS-guided denoising (Eq. 1-3). UPOS tagset provides AUX, which NLTK's
+# universal tagset does not.
+spacy>=3.7
+
+# Evaluation
+bert-score>=0.3.13
+scikit-learn>=1.3     # PCA for the latent-space analysis (Fig. 3/5)
+matplotlib>=3.7       # figures
+
+# Cost profiling (Table 5)
+thop>=0.1.1
+
+# Tests
+pytest>=8.0
+
+# Optional cross-check for SARI; not required.
+# easse @ git+https://github.com/feralvam/easse.git
